@@ -33,7 +33,6 @@ class Phone(Field):
             raise ValueError("Phone must be 10 digits")
         self._value = new_value
 
-## Birthday is stored as `date` for easy calculations; input format must be DD.MM.YYYY.
 class Birthday(Field):
     def __init__(self, value: str):
         try:
@@ -102,7 +101,6 @@ class AddressBook(UserDict):
     def delete(self, name):
         self.data.pop(name, None)
 
-# Returns a list of users to greet within next 7 days (weekends moved to Monday): [{"name", "congratulation_date"}]        
     def get_upcoming_birthdays(self):
         today = datetime.today().date()
         result = []

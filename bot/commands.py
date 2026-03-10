@@ -1,7 +1,6 @@
 from typing import List
 from bot.errors import input_error
-from bot.addressbook import AddressBook
-from bot.addressbook import Record
+from bot.addressbook import AddressBook, Record
 
 @input_error
 def add_contact(args: List[str], book: AddressBook) -> str:
@@ -88,5 +87,3 @@ def birthdays(args: List[str], book: AddressBook) -> str:
 
     lines = [f"{u['name']}: {u['congratulation_date']}" for u in upcoming]
     return "\n".join(lines)
-
-
