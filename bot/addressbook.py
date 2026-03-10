@@ -33,7 +33,6 @@ class Phone(Field):
             raise ValueError("Phone must be 10 digits")
         self._value = new_value
 
-## Birthday is stored as `date` for easy calculations; input format must be DD.MM.YYYY.
 class Birthday(Field):
     def __init__(self, value: str):
         try:
@@ -81,9 +80,15 @@ def adjust_if_weekend(d: date) -> date:
     return d
 
 def get_next_birthday_this_or_next_year(birthday: date, today: date) -> date:
-    next_bday = birthday.replace(year=today.year)
+    try:
+        next_bday = birthday.replace(year=today.year)
+    except ValueError:
+        next_bday = date(today.year, 2, 28)
     if next_bday < today:
-        next_bday = next_bday.replace(year=today.year + 1)
+        try:
+            next_bday = birthday.replace(year=today.year + 1)
+        except ValueError:
+            next_bday = date(today.year + 1, 2, 28)
     return next_bday
 
 class AddressBook(UserDict):
@@ -96,7 +101,6 @@ class AddressBook(UserDict):
     def delete(self, name):
         self.data.pop(name, None)
 
-# Returns a list of users to greet within next 7 days (weekends moved to Monday): [{"name", "congratulation_date"}]        
     def get_upcoming_birthdays(self):
         today = datetime.today().date()
         result = []
