@@ -81,9 +81,15 @@ def adjust_if_weekend(d: date) -> date:
     return d
 
 def get_next_birthday_this_or_next_year(birthday: date, today: date) -> date:
-    next_bday = birthday.replace(year=today.year)
+    try:
+        next_bday = birthday.replace(year=today.year)
+    except ValueError:
+        next_bday = date(today.year, 2, 28)
     if next_bday < today:
-        next_bday = next_bday.replace(year=today.year + 1)
+        try:
+            next_bday = birthday.replace(year=today.year + 1)
+        except ValueError:
+            next_bday = date(today.year + 1, 2, 28)
     return next_bday
 
 class AddressBook(UserDict):
