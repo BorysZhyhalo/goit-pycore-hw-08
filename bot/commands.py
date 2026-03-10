@@ -1,10 +1,11 @@
 from typing import List
 from bot.errors import input_error
-from bot.addressbook import AddressBook
-from bot.addressbook import Record
+from bot.addressbook import AddressBook, Record
 
 @input_error
 def add_contact(args: List[str], book: AddressBook) -> str:
+    if len(args) < 2:
+        raise IndexError
     name, phone, *_ = args
     record = book.find(name)
     message = "Contact updated."
@@ -48,13 +49,7 @@ def show_phone(args: List[str], book: AddressBook) -> str:
 def show_all(args: List[str], book: AddressBook) -> str:
     if not book.data:
         return "No contacts found."
-
-    lines = []
-    for name, record in book.data.items():
-        phones = "; ".join(phone.value for phone in record.phones)
-        lines.append(f"{name}: {phones}")
-
-    return "\n".join(lines)
+    return "\n".join(str(record) for record in book.data.values())
 
 @input_error
 # Adds birthday to an existing contact; date must be in DD.MM.YYYY.
@@ -89,4 +84,21 @@ def birthdays(args: List[str], book: AddressBook) -> str:
     lines = [f"{u['name']}: {u['congratulation_date']}" for u in upcoming]
     return "\n".join(lines)
 
+@input_error
+def add_email(args: List[str], book: AddressBook) -> str:
+    name, email = args[0], args[1]
+    record = book.find(name)
+    if record is None:
+        return "Contact not found."
+    record.add_email(email)
+    return "Email added."
 
+@input_error
+def add_address(args: List[str], book: AddressBook) -> str:
+    name = args[0]
+    address = " ".join(args[1:])
+    record = book.find(name)
+    if record is None:
+        return "Contact not found."
+    record.add_address(address)
+    return "Address added."

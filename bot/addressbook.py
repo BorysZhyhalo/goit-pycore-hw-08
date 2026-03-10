@@ -1,3 +1,4 @@
+import re
 from collections import UserDict
 from datetime import datetime, date, timedelta
 
@@ -33,7 +34,22 @@ class Phone(Field):
             raise ValueError("Phone must be 10 digits")
         self._value = new_value
 
-## Birthday is stored as `date` for easy calculations; input format must be DD.MM.YYYY.
+class Email(Field):
+    @Field.value.setter
+    def value(self, new_value):
+        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", new_value):
+            raise ValueError("Invalid email format.")
+        self._value = new_value
+
+
+class Address(Field):
+    @Field.value.setter
+    def value(self, new_value):
+        if not str(new_value).strip():
+            raise ValueError("Address cannot be empty.")
+        self._value = str(new_value).strip()
+
+
 class Birthday(Field):
     def __init__(self, value: str):
         try:
@@ -47,6 +63,8 @@ class Record:
         self.name = Name(name)
         self.phones = []
         self.birthday = None
+        self.email = None
+        self.address = None
 
     def add_phone(self, phone: str) -> None:
         self.phones.append(Phone(phone))
@@ -66,11 +84,25 @@ class Record:
         if found_phone:
             found_phone.value = new_phone
 
+    def add_email(self, email: str) -> None:
+        self.email = Email(email)
+
+    def add_address(self, address: str) -> None:
+        self.address = Address(address)
+
     def add_birthday(self, birthday: str) -> None:
         self.birthday = Birthday(birthday)
 
     def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
+        parts = [f"Contact name: {self.name.value}"]
+        parts.append(f"phones: {'; '.join(p.value for p in self.phones)}")
+        if self.email:
+            parts.append(f"email: {self.email.value}")
+        if self.address:
+            parts.append(f"address: {self.address.value}")
+        if self.birthday:
+            parts.append(f"birthday: {self.birthday.value.strftime('%d.%m.%Y')}")
+        return ", ".join(parts)
 
 # Helpers for upcoming birthday calculation: move weekend greetings to Monday and pick next birthday date.
 def adjust_if_weekend(d: date) -> date:
@@ -81,9 +113,15 @@ def adjust_if_weekend(d: date) -> date:
     return d
 
 def get_next_birthday_this_or_next_year(birthday: date, today: date) -> date:
-    next_bday = birthday.replace(year=today.year)
+    try:
+        next_bday = birthday.replace(year=today.year)
+    except ValueError:
+        next_bday = date(today.year, 2, 28)
     if next_bday < today:
-        next_bday = next_bday.replace(year=today.year + 1)
+        try:
+            next_bday = birthday.replace(year=today.year + 1)
+        except ValueError:
+            next_bday = date(today.year + 1, 2, 28)
     return next_bday
 
 class AddressBook(UserDict):
@@ -96,7 +134,6 @@ class AddressBook(UserDict):
     def delete(self, name):
         self.data.pop(name, None)
 
-# Returns a list of users to greet within next 7 days (weekends moved to Monday): [{"name", "congratulation_date"}]        
     def get_upcoming_birthdays(self):
         today = datetime.today().date()
         result = []
